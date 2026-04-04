@@ -1,13 +1,13 @@
 {
-  "role": "employee",
+  "_id": "69d0fccd583a74a236b15e0b",
+  "name": "Media Marek",
+  "email": "mediamarek2025@gmail.com",
+  "role": "superadmin",
   "companyId": null,
   "company": null,
   "isActive": true,
   "lastLoginAt": null,
-  "_id": "69c66127b4d288c4a3eccc2e",
-  "name": "Admin User",
-  "email": "mediamarek2025@gmail.com",
-  "createdAt": "2026-03-27T10:51:19.864Z",
-  "updatedAt": "2026-03-27T10:51:37.328Z",
+  "createdAt": "2026-04-04T11:58:05.598Z",
+  "updatedAt": "2026-04-04T11:58:05.598Z",
   "__v": 0
 }
