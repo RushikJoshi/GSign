@@ -9,6 +9,7 @@ import SigningWorkspace from "./pages/SigningWorkspace";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import Unauthorized from "./pages/Unauthorized";
 import UserDashboard from "./pages/UserDashboard";
+import NewRequest from "./pages/request/NewRequest";
 
 const PublicOnlyRoute = ({ children }) => {
   const { isAuthenticated, isAuthReady } = useAuth();
@@ -62,6 +63,7 @@ function App() {
         <Route element={<ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.HR]} />}>
           <Route path="/company-admin" element={<CompanyAdminDashboard />} />
           <Route path="/history" element={<HistoryPage />} />
+          <Route path="/request/new" element={<NewRequest />} />
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={[ROLES.EMPLOYEE, ROLES.HR, ROLES.ADMIN]} />}>

@@ -1,123 +1,88 @@
-import { useMemo, useState } from "react";
-import { NavLink } from "react-router-dom";
+import { useState } from "react";
+import Sidebar from "./Sidebar";
 import { useAuth } from "../../context/AuthContext";
-import { ROLES } from "../../constants/roles";
-
-const roleConfig = {
-  [ROLES.SUPERADMIN]: {
-    label: "Super Admin",
-    nav: [{ label: "Dashboard", to: "/super-admin" }],
-  },
-  [ROLES.ADMIN]: {
-    label: "Company Admin",
-    nav: [
-      { label: "Dashboard", to: "/company-admin" },
-      { label: "History", to: "/history" },
-    ],
-  },
-  [ROLES.HR]: {
-    label: "HR",
-    nav: [
-      { label: "Dashboard", to: "/company-admin" },
-      { label: "My Queue", to: "/my-documents" },
-      { label: "History", to: "/history" },
-    ],
-  },
-  [ROLES.EMPLOYEE]: {
-    label: "Employee",
-    nav: [{ label: "My Queue", to: "/my-documents" }],
-  },
-};
+import { Menu, LogOut, Bell, Search, User, ChevronDown } from "lucide-react";
 
 const DashboardLayout = ({ title, subtitle, children }) => {
   const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const config = useMemo(() => roleConfig[user?.role] || roleConfig[ROLES.EMPLOYEE], [user?.role]);
-
   return (
-    <div className="min-h-screen text-slate-900">
-      <div className="mx-auto flex max-w-[1600px]">
-        <aside
-          className={`fixed inset-y-0 left-0 z-50 w-[290px] border-r border-slate-200/70 bg-white/95 px-5 py-6 shadow-2xl shadow-slate-200/70 backdrop-blur-xl lg:static lg:block lg:min-h-screen lg:translate-x-0 ${
-            sidebarOpen ? "translate-x-0" : "-translate-x-full"
-          } transition-transform duration-300`}
-        >
-          <div className="mb-10">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">SignFlow</p>
-            <h2 className="mt-2 text-2xl font-semibold text-slate-900">Workspace</h2>
-            <p className="mt-1 text-sm text-slate-500">{config.label} Console</p>
+    <div className="flex h-screen bg-white overflow-hidden">
+      {/* Sidebar Component */}
+      <Sidebar setSidebarOpen={setSidebarOpen} />
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {/* Header Enhancement */}
+        <header className="h-[60px] bg-white border-b border-slate-200 px-6 flex items-center justify-between z-40 flex-shrink-0">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="lg:hidden p-2 hover:bg-slate-50 rounded-lg transition"
+            >
+              <Menu className="w-5 h-5 text-slate-600" />
+            </button>
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-lg border border-slate-200 w-[280px]">
+              <Search className="w-4 h-4 text-slate-400" />
+              <input 
+                type="text" 
+                placeholder="Search..." 
+                className="bg-transparent border-none text-sm focus:outline-none w-full text-slate-600"
+              />
+            </div>
           </div>
 
-          <nav className="space-y-1.5">
-            {config.nav.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                onClick={() => setSidebarOpen(false)}
-                className={({ isActive }) =>
-                  `flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition ${
-                    isActive
-                      ? "bg-slate-900 text-white shadow-lg shadow-slate-900/20"
-                      : "text-slate-600 hover:bg-slate-100"
-                  }`
-                }
-              >
-                {item.label}
-              </NavLink>
-            ))}
-          </nav>
-
-          <div className="mt-8 rounded-2xl border border-slate-200/80 bg-gradient-to-br from-slate-50 to-white p-4">
-            <p className="text-[11px] uppercase tracking-[0.16em] text-slate-500">Signed in as</p>
-            <p className="mt-1 font-semibold text-slate-900">{user?.name}</p>
-            <p className="truncate text-sm text-slate-500">{user?.email}</p>
-          </div>
-        </aside>
-
-        {sidebarOpen ? (
-          <button
-            type="button"
-            aria-label="Close sidebar"
-            onClick={() => setSidebarOpen(false)}
-            className="fixed inset-0 z-40 bg-slate-900/30 lg:hidden"
-          />
-        ) : null}
-
-        <div className="min-h-screen flex-1">
-          <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-white/85 backdrop-blur-xl">
-            <div className="flex items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-700 lg:hidden"
-                  onClick={() => setSidebarOpen(true)}
-                  aria-label="Open sidebar"
-                >
-                  ≡
-                </button>
-                <div>
-                  <h1 className="text-xl font-semibold text-slate-900 sm:text-2xl">{title}</h1>
-                  <p className="text-sm text-slate-500">{subtitle}</p>
-                </div>
+          <div className="flex items-center gap-4 font-medium text-slate-600">
+            <button className="p-1.5 hover:bg-slate-50 rounded-lg text-slate-400 transition-colors relative">
+               <Bell className="w-4 h-4" />
+               <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-sky-500 rounded-full border border-white"></span>
+            </button>
+            
+            <div className="flex items-center gap-3 pl-2 group cursor-pointer">
+              <div className="hidden sm:flex flex-col items-end">
+                <span className="text-sm font-semibold text-slate-700">{user?.name}</span>
+                <span className="text-[10px] text-slate-400 uppercase font-bold">{user?.role}</span>
               </div>
-
-              <div className="flex items-center gap-3">
-                <span className="hidden rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700 sm:inline-flex">
-                  Production Workspace
-                </span>
-                <button type="button" onClick={logout} className="sf-btn-primary px-4 py-2">
-                  Logout
-                </button>
+              <div className="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500">
+                <User className="w-4 h-4" />
               </div>
             </div>
-          </header>
+            
+            <button 
+              onClick={logout}
+              className="p-1.5 hover:bg-rose-50 hover:text-rose-600 rounded-lg transition-all text-slate-400"
+              title="Logout"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
+        </header>
 
-          <main className="px-4 py-6 sm:px-6 lg:px-8">
-            <div className="sf-fade-in">{children}</div>
-          </main>
-        </div>
+        {/* Page Content Scrollable Area */}
+        <main className="flex-1 overflow-y-auto bg-white custom-scrollbar">
+          <div className="w-full min-h-full px-8 py-6">
+            {/* Dynamic Page Header */}
+            <div className="mb-6">
+              <h1 className="text-[22px] font-medium text-slate-800 tracking-tight">{title}</h1>
+              {subtitle && <p className="text-[12px] text-slate-500 font-medium mt-1">{subtitle}</p>}
+            </div>
+
+            {/* Content Injection */}
+            <div className="pb-24">
+              {children}
+            </div>
+          </div>
+        </main>
       </div>
+
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 z-[60] bg-slate-900/20 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
     </div>
   );
 };

@@ -14,56 +14,47 @@ body,
   min-height: 100%;
 }
 
-html {
-  scroll-behavior: smooth;
-}
-
 body {
   margin: 0;
-  font-family: "Manrope", "Avenir Next", "Segoe UI", sans-serif;
-  color: #0f172a;
-  background:
-    radial-gradient(circle at 0% 0%, rgba(14, 165, 233, 0.09), transparent 32%),
-    radial-gradient(circle at 100% 0%, rgba(99, 102, 241, 0.08), transparent 35%),
-    linear-gradient(180deg, #f8fafc 0%, #f7f9fc 45%, #f8fafc 100%);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: #334155;
+  background-color: #fcfcfd;
   overflow-y: auto;
   overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
 }
 
-::selection {
-  background: rgba(15, 23, 42, 0.12);
+/* Slim Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
 }
 
 @layer components {
   .sf-card {
-    @apply rounded-2xl border border-slate-200/80 bg-white/90 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur;
+    @apply rounded-xl border border-slate-200 bg-white;
   }
 
   .sf-input {
-    @apply w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none ring-0 transition duration-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-100;
+    @apply w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 outline-none transition duration-150 focus:border-sky-500;
   }
 
   .sf-btn-primary {
-    @apply inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition duration-200 hover:-translate-y-[1px] hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center rounded-lg bg-sky-600 px-5 py-2.5 text-sm font-semibold text-white transition duration-150 hover:bg-sky-700 active:scale-95 disabled:opacity-50;
   }
 
   .sf-btn-secondary {
-    @apply inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition duration-200 hover:bg-slate-50;
+    @apply inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-600 transition duration-150 hover:bg-slate-50 active:scale-95;
   }
 
   .sf-fade-in {
-    animation: sf-fade-in 320ms ease-out both;
-  }
-}
-
-@keyframes sf-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
