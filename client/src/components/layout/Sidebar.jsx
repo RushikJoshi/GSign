@@ -21,120 +21,138 @@ import { ROLES } from "../../constants/roles";
 
 const Sidebar = ({ setSidebarOpen }) => {
   const { user } = useAuth();
-  const [documentsExpanded, setDocumentsExpanded] = useState(true);
 
   const mainLinks = [
-    { label: "Dashboard", to: user.role === ROLES.SUPERADMIN ? "/super-admin" : "/company-admin", icon: LayoutDashboard },
+    { 
+      label: "Sign", 
+      to: user.role === ROLES.SUPERADMIN ? "/super-admin" : "/company-admin", 
+      icon: LayoutDashboard 
+    },
+    { 
+      label: "Documents", 
+      to: "/history", 
+      icon: FileText,
+      hasFlyout: true,
+      sections: [
+        {
+          title: "Sent",
+          links: [
+            { label: "All", to: "/history" },
+            { label: "Scheduled", to: "/history" },
+            { label: "In progress", to: "/history" },
+            { label: "Completed", to: "/history" },
+            { label: "Declined", to: "/history" },
+            { label: "Expired", to: "/history" },
+            { label: "Recalled", to: "/history" },
+            { label: "Draft", to: "/history" },
+            { label: "Bulk send", to: "/history" },
+          ]
+        },
+        {
+          title: "Received",
+          links: [
+            { label: "All", to: "/history" },
+            { label: "Action required", to: "/history" },
+          ]
+        }
+      ]
+    },
     { label: "Templates", to: "/templates", icon: FileStack },
     { label: "SignForms", to: "/sign-forms", icon: SquarePen },
     { label: "Reports", to: "/reports", icon: BarChart3 },
-    { label: "Settings", to: "/settings", icon: Settings },
-  ];
-
-  const sentSubLinks = [
-    { label: "All", to: "/documents/sent/all", icon: History },
-    { label: "In Progress", to: "/documents/sent/in-progress", icon: Clock },
-    { label: "Completed", to: "/documents/sent/completed", icon: CheckCircle2 },
-    { label: "Declined", to: "/documents/sent/declined", icon: XCircle },
+    { 
+      label: "Settings", 
+      to: "/settings", 
+      icon: Settings,
+      hasFlyout: true,
+      sections: [
+        {
+          title: "General",
+          links: [
+            { label: "My profile", to: "/settings" },
+            { label: "Integrations", to: "/settings" },
+            { label: "My notifications", to: "/settings" },
+            { label: "Contacts", to: "/settings" },
+            { label: "Trash", to: "/settings" },
+          ]
+        },
+        {
+          title: "Admin",
+          links: [
+            { label: "Users and control", to: "/settings" },
+            { label: "Account settings", to: "/settings" },
+            { label: "Subscription details", to: "/settings" },
+            { label: "Branding", to: "/settings" },
+          ]
+        }
+      ]
+    },
   ];
 
   return (
-    <aside className="sf-sidebar h-screen flex flex-col bg-[#1e293b] text-slate-400 w-[240px] fixed lg:static inset-y-0 z-50">
-      {/* Branding */}
-      <div className="h-[60px] flex items-center px-6 gap-3 border-b border-white/5">
-        <div className="w-7 h-7 rounded bg-sky-500 flex items-center justify-center text-white font-bold text-sm">S</div>
-        <span className="text-lg font-bold text-white tracking-tight">SignFlow</span>
+    <aside className="h-screen flex flex-col bg-[#272d37] w-[90px] fixed lg:static inset-y-0 z-50">
+      {/* Branding - matching Zoho Logo area */}
+      <div className="h-[60px] flex items-center justify-center border-b border-white/5">
+        <LayoutDashboard className="w-6 h-6 text-slate-400 opacity-50" />
       </div>
 
       {/* Menu Area */}
-      <div className="flex-1 overflow-y-auto py-4 custom-scrollbar">
-        <nav className="px-3 space-y-0.5">
+      <div className="flex-1 py-4 flex flex-col items-center">
+        <nav className="w-full space-y-4">
           {mainLinks.map((link) => (
-            <NavLink
-              key={link.to}
-              to={link.to}
-              onClick={() => setSidebarOpen(false)}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2 rounded text-[13px] transition-colors ${
-                  isActive 
-                    ? "bg-sky-500/10 text-sky-400 font-semibold" 
-                    : "hover:bg-white/5 hover:text-slate-200"
-                }`
-              }
-            >
-              <link.icon className="w-4 h-4" />
-              {link.label}
-            </NavLink>
-          ))}
-        </nav>
-
-        {/* Documents Expandable Section */}
-        <div className="mt-6 px-3">
-          <button 
-            onClick={() => setDocumentsExpanded(!documentsExpanded)}
-            className="w-full flex items-center justify-between px-3 py-2 text-slate-500 hover:text-slate-200 transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <FileText className="w-4 h-4" />
-              <span className="text-[13px] font-semibold">Documents</span>
-            </div>
-            {documentsExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
-          </button>
-
-          {documentsExpanded && (
-            <div className="mt-1 space-y-0.5">
-              <div className="text-[10px] font-bold text-slate-600 uppercase tracking-widest py-1.5 px-3 pl-10">Sent</div>
-              {sentSubLinks.map((link) => (
-                <NavLink
-                  key={link.to}
-                  to={link.to}
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 pl-10 pr-3 py-1.5 rounded text-[12px] transition-colors ${
-                      isActive ? "text-sky-400 bg-sky-500/5 font-medium" : "hover:bg-white/5 hover:text-slate-300"
-                    }`
-                  }
-                >
-                  <link.icon className="w-3.5 h-3.5" />
-                  {link.label}
-                </NavLink>
-              ))}
-              <div className="text-[10px] font-bold text-slate-600 uppercase tracking-widest py-1.5 px-3 pl-10 mt-2">Received</div>
+            <div key={link.label} className="relative group flex justify-center">
               <NavLink
-                to="/documents/received/all"
+                to={link.to}
+                onClick={() => setSidebarOpen(false)}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 pl-10 pr-3 py-1.5 rounded text-[12px] transition-colors ${
-                    isActive ? "text-sky-400 bg-sky-500/5 font-medium" : "hover:bg-white/5 hover:text-slate-300"
+                  `flex flex-col items-center gap-1.5 w-full py-3 transition-colors ${
+                    isActive 
+                      ? "text-[#4fd1c5]" 
+                      : "text-slate-400 hover:text-white"
                   }`
                 }
               >
-                <Inbox className="w-3.5 h-3.5" />
-                Action Required
+                <link.icon className={`w-5 h-5 ${link.label === 'Sign' ? 'stroke-[2.5]' : ''}`} />
+                <span className="text-[11px] font-medium">{link.label}</span>
               </NavLink>
+
+              {/* Flyout Menu */}
+              {link.hasFlyout && (
+                <div className={`absolute left-full ${link.label === 'Settings' ? 'bottom-0' : 'top-0'} ml-0.5 w-[240px] bg-[#2d3748] shadow-2xl rounded-r-lg opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-[100] border-l border-white/5`}>
+                   <div className="p-6 space-y-8 max-h-[85vh] overflow-y-auto no-scrollbar">
+                     {link.sections.map((section) => (
+                       <div key={section.title}>
+                         <h4 className="text-white text-xs font-bold uppercase tracking-wider mb-4 opacity-100">{section.title}</h4>
+                         <div className="space-y-3">
+                            {section.links.map((sublink) => (
+                              <NavLink 
+                                key={sublink.label} 
+                                to={sublink.to} 
+                                className="block text-[13px] text-slate-300 hover:text-white transition-colors"
+                              >
+                                {sublink.label}
+                              </NavLink>
+                            ))}
+                         </div>
+                       </div>
+                     ))}
+                   </div>
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          ))}
+        </nav>
       </div>
 
-      {/* Floating Create Button Area */}
-      <div className="p-4 border-t border-white/5">
-        <NavLink 
-          to="/request/new" 
-          className="flex items-center justify-center gap-2 w-full py-2 bg-sky-600 hover:bg-sky-700 text-white rounded text-[13px] font-bold transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Create New</span>
-        </NavLink>
-      </div>
-
-      {/* User Area Bottom */}
-      <div className="p-4 bg-slate-900/50 flex items-center gap-3">
-        <div className="w-8 h-8 rounded bg-slate-700 flex items-center justify-center text-slate-300 font-bold text-xs">
-          {user?.name?.[0]?.toUpperCase()}
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-xs font-bold text-slate-200 truncate">{user?.name}</p>
-          <p className="text-[10px] text-slate-500 truncate uppercase font-medium">{user?.role}</p>
-        </div>
+      {/* Floating Create Button at the bottom (Big Green Plus like Zoho) */}
+      <div className="p-6 mt-auto flex justify-center">
+         <NavLink 
+           to="/request/new" 
+           className="w-11 h-11 bg-[#249272] hover:bg-[#1e7a5f] text-white rounded-md shadow-lg flex items-center justify-center transition-all active:scale-95"
+           title="Create New"
+         >
+           <Plus className="w-6 h-6 stroke-[3]" />
+         </NavLink>
       </div>
     </aside>
   );

@@ -102,6 +102,16 @@ const documentSchema = new mongoose.Schema(
       default: false,
       index: true,
     },
+    fields: {
+      type: [mongoose.Schema.Types.Mixed],
+      default: [],
+    },
+    // NEW FIELDS FOR SIGNING WORKFLOW
+    signingMode: {
+       type: String,
+       enum: ["sequential", "parallel"],
+       default: "parallel",
+    }
   },
   { timestamps: true }
 );

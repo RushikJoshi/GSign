@@ -48,6 +48,41 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    firstName: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    lastName: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    jobTitle: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    signatureUrl: {
+      type: String,
+      default: null,
+    },
+    initialsUrl: {
+      type: String,
+      default: null,
+    },
+    stampUrl: {
+      type: String,
+      default: null,
+    },
+    dateFormat: {
+      type: String,
+      default: "MMM dd yyyy HH:mm z",
+    },
+    timeZone: {
+      type: String,
+      default: "Asia/Kolkata",
+    },
     refreshToken: {
       type: String,
       default: null,

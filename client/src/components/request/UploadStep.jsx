@@ -77,7 +77,7 @@ const UploadStep = ({ onNext, initialData }) => {
       </div>
 
       {/* Footer Actions */}
-      <div className="fixed bottom-0 left-[240px] right-0 h-[60px] bg-[#f8fafc] border-t border-slate-200 flex items-center px-8 gap-3 z-50">
+      <div className="fixed bottom-0 left-[90px] right-0 h-[60px] bg-[#f8fafc] border-t border-slate-200 flex items-center px-8 gap-3 z-50">
         <button 
           onClick={() => onNext({ file, title })}
           disabled={!file || !title}
@@ -85,7 +85,10 @@ const UploadStep = ({ onNext, initialData }) => {
         >
           Continue
         </button>
-        <button className="px-6 py-1.5 bg-white border border-slate-300 text-slate-600 rounded text-[13px] font-bold transition-colors hover:bg-slate-100">
+        <button 
+          onClick={() => window.location.href = "/company-admin"}
+          className="px-6 py-1.5 bg-white border border-slate-300 text-slate-600 rounded text-[13px] font-bold transition-colors hover:bg-slate-100"
+        >
           Close
         </button>
       </div>

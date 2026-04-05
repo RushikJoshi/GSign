@@ -8,6 +8,9 @@ import superAdminRoutes from "./routes/superAdmin.routes.js";
 import companyAdminRoutes from "./routes/companyAdmin.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import documentManagementRoutes from "./routes/documentManagement.routes.js";
+import uploadRoutes from "./routes/upload.routes.js";
+import signatureRoutes from "./routes/signature.routes.js";
+import signingRoutes from "./routes/signing.routes.js";
 import { isDbConnected } from "./config/db.js";
 
 const app = express();
@@ -68,6 +71,9 @@ app.use("/api/super-admin", superAdminRoutes);
 app.use("/api/company-admin", companyAdminRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/dms", documentManagementRoutes);
+app.use("/api/upload", uploadRoutes);
+app.use("/api/signature", signatureRoutes);
+app.use("/api/signing", signingRoutes);
 
 app.use((error, _req, res, _next) => {
   return res.status(error.status || 500).json({ message: error.message || "Internal server error." });

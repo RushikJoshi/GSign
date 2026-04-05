@@ -29,6 +29,7 @@ export const connectDB = async () => {
   if (resolverList.length) {
     try {
       dns.setServers(resolverList);
+      // Using public resolvers avoids local DNS that may block SRV lookups (ECONNREFUSED).
     } catch {
       // If custom DNS is invalid, Node will continue with system DNS.
     }

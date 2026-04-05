@@ -121,10 +121,33 @@ const HistoryPage = () => {
                       </td>
                       <td className="px-3 py-2.5"><StatusBadge status={doc.status} /></td>
                       <td className="px-3 py-2.5 text-slate-600">{formatDate(doc.updatedAt)}</td>
-                      <td className="px-3 py-2.5">
+                      <td className="px-3 py-2.5 flex items-center gap-2">
                         <button type="button" onClick={() => openTimeline(doc)} className="sf-btn-secondary px-3 py-1.5 text-xs">
-                          View Timeline
+                          Timeline
                         </button>
+                        {(doc.status === "completed" || doc.status === "signed") && (
+                          <button 
+                            type="button"
+                            onClick={async () => {
+                               try {
+                                 const response = await fetch(dmsApi.signedPdfUrl(doc._id), {
+                                   headers: {
+                                      'Authorization': `Bearer ${localStorage.getItem('sf_access_token')}`
+                                   }
+                                 });
+                                 if (!response.ok) throw new Error('Unauthorized');
+                                 const blob = await response.blob();
+                                 const url = window.URL.createObjectURL(blob);
+                                 window.open(url, '_blank');
+                               } catch (err) {
+                                 alert("Failed to open document. Please ensure you are logged in.");
+                               }
+                            }}
+                            className="sf-btn-primary px-3 py-1.5 text-xs bg-cyan-600 hover:bg-cyan-700"
+                          >
+                            View Signed PDF
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))

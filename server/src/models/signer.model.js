@@ -76,6 +76,37 @@ const signerSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    // NEW FIELDS FOR OTP AND WORKFLOW
+    name: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    role: {
+      type: String,
+      enum: ["signer", "approver", "cc"],
+      default: "signer",
+    },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    otpCode: {
+      type: String,
+      default: null,
+    },
+    otpExpiresAt: {
+      type: Date,
+      default: null,
+    },
+    verifiedAt: {
+      type: Date,
+      default: null,
+    },
+    otpAttempts: {
+      type: Number,
+      default: 0,
+    }
   },
   { timestamps: true }
 );

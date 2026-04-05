@@ -26,6 +26,9 @@ const auditLogSchema = new mongoose.Schema(
         "SIGN_REQUEST_SENT",
         "DOCUMENT_VIEWED",
         "DOCUMENT_SIGNED",
+        "OTP_VERIFIED",
+        "OTP_FAILED",
+        "DOCUMENT_DECLINED",
       ],
     },
     ipAddress: {
