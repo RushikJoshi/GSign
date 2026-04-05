@@ -149,6 +149,48 @@ const createSignedPdf = async ({ document, signers }) => {
 
   const existingBytes = await loadPdfBytes(document.filePath);
   const pdfDoc = await PDFDocument.load(existingBytes);
+  const totalPages = pdfDoc.getPageCount();
+
+  // 1. Embed Signatures from Fields
+  const fields = Array.isArray(document.fields) ? document.fields : [];
+  for (const field of fields) {
+    if (field.type === "signature" && field.signerEmail) {
+      const signer = signers.find(s => s.email.toLowerCase() === field.signerEmail.toLowerCase());
+      if (signer && signer.signatureDataUrl) {
+         try {
+           // signatureDataUrl is "data:image/png;base64,..."
+           const base64Data = signer.signatureDataUrl.split(",")[1];
+           const imageBytes = Buffer.from(base64Data, "base64");
+           const signatureImage = await pdfDoc.embedPng(imageBytes);
+           
+           const pageIndex = (Number(field.page) || 1) - 1;
+           if (pageIndex >= 0 && pageIndex < totalPages) {
+              const page = pdfDoc.getPage(pageIndex);
+              const { width, height } = page.getSize();
+              
+              // Draw signature
+              // Note: y is typically from bottom in pdf-lib, might need inversion if UI uses top-down
+              // Assuming UI x/y are percentages or pixels from top-left
+              // For simplicity, let's assume they are standard units from bottom-left for now or need conversion
+              // Most web-based PDF editors use top-left. Let's assume field.y is from top.
+              const drawX = Number(field.x) || 100;
+              const drawY = height - (Number(field.y) || 100) - (Number(field.height) || 40);
+              
+              page.drawImage(signatureImage, {
+                x: drawX,
+                y: drawY,
+                width: Number(field.width) || 120,
+                height: Number(field.height) || 40,
+              });
+           }
+         } catch (err) {
+           console.error(`Failed to embed signature for ${field.signerEmail}:`, err.message);
+         }
+      }
+    }
+  }
+
+  // 2. Add Verification Page at end
   const page = pdfDoc.addPage([595, 842]);
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
@@ -331,6 +373,13 @@ export const uploadDocument = async (req, res) => {
       status: "pending",
     });
 
+    await logAuditEvent({
+      documentId: document._id,
+      eventType: "uploaded",
+      req,
+      metadata: { originalName: document.originalName, size: document.size }
+    });
+
     return res.status(201).json({ message: "Document uploaded successfully.", document });
   } catch (error) {
     return res.status(500).json({ message: "Failed to upload document.", error: error.message });
@@ -340,7 +389,7 @@ export const uploadDocument = async (req, res) => {
 export const addSigners = async (req, res) => {
   try {
     const { documentId } = req.params;
-    const { signers } = req.body;
+    const { signers, signingMode = "parallel" } = req.body;
 
     if (!Array.isArray(signers) || signers.length === 0) {
       return res.status(400).json({ message: "signers must be a non-empty array." });
@@ -399,8 +448,9 @@ export const addSigners = async (req, res) => {
     );
 
     document.totalSteps = createdSigners.length;
-    document.currentStep = createdSigners.length ? 1 : 0;
+    document.currentStep = 0; // Start at 0 for sequential logic
     document.status = "pending";
+    document.signingMode = signingMode;
     await document.save();
 
     return res.status(201).json({
@@ -480,12 +530,20 @@ export const startEmailSigningFlow = async (req, res) => {
       return res.status(409).json({ message: editError });
     }
 
-    const firstSigner = await Signer.findOne({ document: document._id }).sort({ signingOrder: 1 });
-    if (!firstSigner) {
+    const allSigners = await Signer.find({ document: document._id }).sort({ signingOrder: 1 });
+    if (!allSigners.length) {
       return res.status(400).json({ message: "No signers configured for this document." });
     }
 
-    await sendSigningEmailToSigner({ signer: firstSigner, document, req });
+    if (document.signingMode === "parallel") {
+      // Send to EVERYONE immediately
+      await Promise.all(
+        allSigners.map(signer => sendSigningEmailToSigner({ signer, document, req }))
+      );
+    } else {
+      // Sequential: Send ONLY to the first one
+      await sendSigningEmailToSigner({ signer: allSigners[0], document, req });
+    }
 
     document.currentStep = 1;
     document.totalSteps = await Signer.countDocuments({ document: document._id });
@@ -493,12 +551,13 @@ export const startEmailSigningFlow = async (req, res) => {
     await document.save();
 
     return res.status(200).json({
-      message: "Signing workflow started. First signer email sent.",
-      firstSigner: {
-        email: firstSigner.email,
-        signingOrder: firstSigner.signingOrder,
-        emailSentAt: firstSigner.emailSentAt,
-      },
+      message: document.signingMode === "parallel" 
+        ? "Signing workflow started. Emails sent to all signers." 
+        : `Signing workflow started. First signer email sent to ${allSigners[0].email}`,
+      signers: allSigners.map(s => ({
+        email: s.email,
+        signingOrder: s.signingOrder,
+      })),
     });
   } catch (error) {
     return res.status(500).json({ message: "Failed to start signing workflow.", error: error.message });
@@ -646,6 +705,17 @@ export const completeSigningByToken = async (req, res) => {
     const remaining = allSigners.filter((item) => item.status !== "signed" && item.status !== "completed");
     const nextSigner = remaining[0] || null;
 
+    // Generate/Update Signed PDF immediately for visibility
+    const updatedDocument = await Document.findById(signer.document._id);
+    const finalSigners = await Signer.find({ document: signer.document._id }).sort({ signingOrder: 1 });
+    const signedPdfPath = await createSignedPdf({
+      document: updatedDocument,
+      signers: finalSigners,
+    });
+    updatedDocument.signedFilePath = signedPdfPath;
+    updatedDocument.signedFileGeneratedAt = new Date();
+    await updatedDocument.save();
+
     if (!nextSigner) {
       await Signer.updateMany({ document: signer.document._id }, { $set: { status: "completed" } });
       if (document) {
@@ -653,6 +723,8 @@ export const completeSigningByToken = async (req, res) => {
         document.totalSteps = allSigners.length;
         document.status = "completed";
         document.isLocked = true;
+        document.signedFilePath = signedPdfPath; // Re-confirmed
+        document.signedFileGeneratedAt = new Date();
       }
 
       await logAuditEvent({
@@ -663,21 +735,15 @@ export const completeSigningByToken = async (req, res) => {
 
       if (document) {
         const timelineLogs = await DocumentAuditLog.find({ document: signer.document._id }).sort({ eventAt: 1 });
-        const finalSigners = await Signer.find({ document: signer.document._id }).sort({ signingOrder: 1 });
+        const finalSignersFull = await Signer.find({ document: signer.document._id }).sort({ signingOrder: 1 });
         const certPath = await createCertificatePdf({
           document,
-          signers: finalSigners,
+          signers: finalSignersFull,
           timelineLogs,
-        });
-        const signedPdfPath = await createSignedPdf({
-          document,
-          signers: finalSigners,
         });
 
         document.certificateFilePath = certPath;
         document.certificateGeneratedAt = new Date();
-        document.signedFilePath = signedPdfPath;
-        document.signedFileGeneratedAt = new Date();
         await document.save();
         await logAuditEvent({
           documentId: signer.document._id,
@@ -911,5 +977,60 @@ export const runAutoReminderJob = async (req, res) => {
     });
   } catch (error) {
     return res.status(500).json({ message: "Failed to run reminder job.", error: error.message });
+  }
+};
+
+export const updateDocumentFields = async (req, res) => {
+  try {
+    const { documentId } = req.params;
+    const { fields } = req.body;
+
+    const companyId = req.user.company?._id || req.user.companyId?._id || req.user.companyId;
+    const document = await Document.findOne({ _id: documentId, company: companyId });
+
+    if (!document) {
+      return res.status(404).json({ message: "Document not found." });
+    }
+
+    const editError = ensureDocumentEditable(document);
+    if (editError) return res.status(409).json({ message: editError });
+
+    document.fields = Array.isArray(fields) ? fields : [];
+    await document.save();
+
+    await logAuditEvent({
+      documentId: document._id,
+      eventType: "fields_updated",
+      req,
+      metadata: { fieldCount: document.fields.length }
+    });
+
+    return res.status(200).json({ message: "Fields updated successfully.", fields: document.fields });
+  } catch (error) {
+    return res.status(500).json({ message: "Failed to update fields.", error: error.message });
+  }
+};
+
+export const saveAsTemplate = async (req, res) => {
+  try {
+    const { documentId } = req.params;
+    const companyId = req.user.company?._id || req.user.companyId?._id || req.user.companyId;
+
+    const document = await Document.findOne({ _id: documentId, company: companyId });
+    if (!document) return res.status(404).json({ message: "Document not found." });
+
+    document.isTemplate = true;
+    await document.save();
+
+    await logAuditEvent({
+      documentId: document._id,
+      eventType: "fields_updated",
+      req,
+      metadata: { isTemplate: true }
+    });
+
+    return res.status(200).json({ message: "Saved as template successfully.", document });
+  } catch (err) {
+    return res.status(500).json({ message: "Failed to save template.", error: err.message });
   }
 };

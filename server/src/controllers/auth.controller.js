@@ -11,6 +11,14 @@ const toAuthUser = (user) => ({
   name: user.name,
   email: user.email,
   role: user.role,
+  firstName: user.firstName || "",
+  lastName: user.lastName || "",
+  jobTitle: user.jobTitle || "",
+  signatureUrl: user.signatureUrl || null,
+  initialsUrl: user.initialsUrl || null,
+  stampUrl: user.stampUrl || null,
+  dateFormat: user.dateFormat || "MMM dd yyyy HH:mm z",
+  timeZone: user.timeZone || "Asia/Kolkata",
   companyId: user.companyId?._id || user.companyId || null,
   company: user.companyId
     ? {
@@ -183,6 +191,48 @@ export const login = async (req, res) => {
 
 export const me = async (req, res) => {
   return res.status(200).json({ user: toAuthUser(req.user) });
+};
+
+export const updateProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    const { 
+      firstName, 
+      lastName, 
+      jobTitle, 
+      signatureUrl, 
+      initialsUrl, 
+      stampUrl, 
+      dateFormat, 
+      timeZone 
+    } = req.body;
+
+    if (firstName !== undefined) user.firstName = firstName;
+    if (lastName !== undefined) user.lastName = lastName;
+    if (jobTitle !== undefined) user.jobTitle = jobTitle;
+    if (signatureUrl !== undefined) user.signatureUrl = signatureUrl;
+    if (initialsUrl !== undefined) user.initialsUrl = initialsUrl;
+    if (stampUrl !== undefined) user.stampUrl = stampUrl;
+    if (dateFormat !== undefined) user.dateFormat = dateFormat;
+    if (timeZone !== undefined) user.timeZone = timeZone;
+
+    if (firstName || lastName) {
+      user.name = `${firstName || ""} ${lastName || ""}`.trim() || user.name;
+    }
+
+    await user.save();
+
+    return res.status(200).json({
+      message: "Profile updated successfully.",
+      user: toAuthUser(user),
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Update failed.", error: error.message });
+  }
 };
 
 export const logout = async (_req, res) => {

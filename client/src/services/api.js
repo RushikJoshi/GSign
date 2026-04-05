@@ -43,6 +43,7 @@ export const authApi = {
   login: (payload) => api.post("/api/auth/login", payload),
   register: (payload) => api.post("/api/auth/register", payload),
   me: () => api.get("/api/auth/me"),
+  updateProfile: (payload) => api.patch("/api/auth/update-profile", payload),
   logout: () => api.post("/api/auth/logout"),
 };
 
@@ -74,6 +75,7 @@ export const dmsApi = {
     api.post("/api/dms/documents/upload", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     }),
+  updateFields: (documentId, payload) => api.patch(`/api/dms/documents/${documentId}/fields`, payload),
   addSigners: (documentId, payload) => api.post(`/api/dms/documents/${documentId}/signers`, payload),
   runReminders: () => api.post("/api/dms/reminders/run"),
   startSigningFlow: (documentId) => api.post(`/api/dms/documents/${documentId}/start-signing`),
@@ -87,6 +89,19 @@ export const userApi = {
   getSigningWorkspace: (documentId) => api.get(`/api/user/documents/${documentId}/workspace`),
   submitSigningFields: (documentId, payload) => api.post(`/api/user/documents/${documentId}/submit-fields`, payload),
   assignedPdfUrl: (documentId) => `${API_BASE_URL}/api/user/documents/${documentId}/file`,
+};
+
+export const uploadApi = {
+  uploadFile: (formData) => api.post("/api/upload", formData, { headers: { "Content-Type": "multipart/form-data" } }),
+  uploadContent: (payload) => api.post("/api/upload/content", payload),
+};
+
+export const signingApi = {
+  getDocument: (token) => api.get(`/api/signing/document/${token}`),
+  sendOTP: (payload) => api.post("/api/signing/send-otp", payload),
+  verifyOTP: (payload) => api.post("/api/signing/verify-otp", payload),
+  signDocument: (payload) => api.post("/api/signing/sign-document", payload),
+  previewUrl: (token) => `${API_BASE_URL}/api/signing/document/${token}/preview`,
 };
 
 export default api;

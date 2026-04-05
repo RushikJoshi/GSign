@@ -1,12 +1,11 @@
 const STATUS_STYLES = {
-  pending: "bg-amber-50 text-amber-700 border-amber-200",
-  viewed: "bg-indigo-50 text-indigo-700 border-indigo-200",
-  signed: "bg-sky-50 text-sky-700 border-sky-200",
-  completed: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  expired: "bg-rose-50 text-rose-700 border-rose-200",
-  in_progress: "bg-blue-50 text-blue-700 border-blue-200",
-  draft: "bg-slate-100 text-slate-700 border-slate-200",
-  waiting: "bg-slate-100 text-slate-700 border-slate-200",
+  pending: "bg-[#fff8e6] text-[#b38b00] border-[#ffe082]",
+  viewed: "bg-[#e8f0fe] text-[#1967d2] border-[#c2e7ff]",
+  signed: "bg-[#e6fffa] text-[#2c7a7b] border-[#81e6d9]",
+  completed: "bg-[#f0fdf4] text-[#166534] border-[#bbfcbe]",
+  expired: "bg-[#fef2f2] text-[#991b1b] border-[#fecaca]",
+  in_progress: "bg-[#eff6ff] text-[#1e40af] border-[#bfdbfe]",
+  draft: "bg-[#f8fafc] text-[#475569] border-[#e2e8f0]",
 };
 
 const StatusBadge = ({ status }) => {

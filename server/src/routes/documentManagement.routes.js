@@ -15,6 +15,7 @@ import {
   startEmailSigningFlow,
   streamSigningDocumentByToken,
   uploadDocument,
+  updateDocumentFields,
 } from "../controllers/documentManagement.controller.js";
 import { ROLES } from "../constants/roles.js";
 import { authorizeRoles, protect, requireCompanyContext } from "../middlewares/auth.middleware.js";
@@ -52,6 +53,7 @@ router.post("/sign/:token/complete", completeSigningByToken);
 router.use(protect, requireCompanyContext, authorizeRoles(ROLES.ADMIN, ROLES.HR));
 
 router.post("/documents/upload", upload.single("document"), uploadDocument);
+router.patch("/documents/:documentId/fields", updateDocumentFields);
 router.post("/documents/:documentId/signers", addSigners);
 router.post("/documents/:documentId/start-signing", startEmailSigningFlow);
 router.post("/reminders/run", runAutoReminderJob);

@@ -10,6 +10,8 @@ import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import Unauthorized from "./pages/Unauthorized";
 import UserDashboard from "./pages/UserDashboard";
 import NewRequest from "./pages/request/NewRequest";
+import Settings from "./pages/Settings";
+import PublicSigningPage from "./pages/PublicSigningPage";
 
 const PublicOnlyRoute = ({ children }) => {
   const { isAuthenticated, isAuthReady } = useAuth();
@@ -69,8 +71,10 @@ function App() {
         <Route element={<ProtectedRoute allowedRoles={[ROLES.EMPLOYEE, ROLES.HR, ROLES.ADMIN]} />}>
           <Route path="/my-documents" element={<UserDashboard />} />
           <Route path="/my-documents/:documentId/sign" element={<SigningWorkspace />} />
+          <Route path="/settings" element={<Settings />} />
         </Route>
 
+        <Route path="/public-sign/:token" element={<PublicSigningPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

@@ -18,6 +18,8 @@ const documentAuditLogSchema = new mongoose.Schema(
     eventType: {
       type: String,
       enum: [
+        "uploaded",
+        "fields_updated",
         "email_sent",
         "reminder_sent",
         "viewed",
