@@ -2,6 +2,7 @@ import { Signer } from "../models/signer.model.js";
 import { Document } from "../models/document.model.js";
 import { AuditLog } from "../models/auditLog.model.js";
 import { sendEmail } from "../utils/sendEmail.js";
+import { cloudinary } from "../config/cloudinary.js";
 import bcrypt from "bcryptjs";
 
 export class SigningService {
@@ -57,7 +58,7 @@ export class SigningService {
 
     // Limit attempts
     if (signer.otpAttempts >= 5) {
-        throw new Error("Too many failed attempts. Please request a new code.");
+      throw new Error("Too many failed attempts. Please request a new code.");
     }
 
     // Verify OTP
@@ -111,41 +112,61 @@ export class SigningService {
       throw new Error("OTP verification required before signing.");
     }
 
-    // 2. Sequential Flow Check
-    if (document.signingMode === "sequential") {
-       // Check if it's this signer's turn
-       // We assume Document.currentStep track how many people ALREADY SIGNED
-       if (signer.signingOrder !== document.currentStep + 1) {
-          throw new Error("It's not your turn to sign this document yet.");
-       }
+    // 2. Sequential/Active Validation
+    if (!signer.isActive) {
+      throw new Error("It is not your turn to sign this document.");
     }
 
-    // 3. Update Signer Status
+    // 3. Selfie Check
+    if (document.selfieRequired && (!signer.selfie || !signer.selfie.url)) {
+      throw new Error("Selfie verification required before finishing.");
+    }
+
+    // 4. Update Signer Status
     signer.status = "signed";
     signer.signedAt = new Date();
-    signer.signatureDataUrl = signatureData; // Or upload to cloudinary if needed
+    signer.signatureDataUrl = signatureData;
+    signer.isActive = false; // completed signing
     await signer.save();
 
     // 4. Update Document Workflow
     document.currentStep += 1;
 
     // Check if fully completed
-    const allSigners = await Signer.find({ document: documentId });
+    const allSigners = await Signer.find({ document: documentId }).sort({ signingOrder: 1 });
     const allSigned = allSigners.every(s => s.status === "signed" || s.status === "completed");
 
+    const signMode = document.signMode || document.signingMode || "parallel";
+
     if (allSigned) {
-        document.status = "completed";
+      document.status = "completed";
     } else {
-        document.status = "in_progress";
-        
-        // Notify NEXT signer in sequential mode
-        if (document.signingMode === "sequential") {
-           const nextSigner = allSigners.find(s => s.signingOrder === document.currentStep + 1);
-           if (nextSigner) {
-              await this.notifyRecipient(document, nextSigner);
-           }
+      document.status = "pending"; // Per requirement: "IF some signed: status = 'pending'"
+
+      // Activate and Notify NEXT signer in sequential mode
+      if (signMode === "sequential") {
+        const nextSigner = allSigners.find(s => s.signingOrder > signer.signingOrder && s.status !== "signed");
+        if (nextSigner) {
+          nextSigner.isActive = true;
+          await nextSigner.save();
+          await this.notifyRecipient(document, nextSigner);
         }
+      }
     }
+
+    // Sync document.signers for frontend/audit
+    document.signers = allSigners.map(s => ({
+      name: s.name,
+      email: s.email,
+      order: s.signingOrder,
+      status: s.status === "signed" ? "signed" : "pending",
+      isActive: s.isActive,
+      signedAt: s.signedAt,
+      viewedAt: s.viewedAt,
+      emailedAt: s.emailSentAt || s.createdAt,
+      selfie: s.selfie
+    }));
+
     await document.save();
 
     // 5. Log Audit
@@ -158,7 +179,7 @@ export class SigningService {
 
     // 6. Notify Completion if done
     if (document.status === "completed") {
-        await this.notifyCompletion(document, allSigners);
+      await this.notifyCompletion(document, allSigners);
     }
 
     return { success: true, status: document.status };
@@ -168,33 +189,74 @@ export class SigningService {
    * Helper to notify next recipient
    */
   static async notifyRecipient(document, signer) {
-     await sendEmail({
-        to: signer.email,
-        subject: `Signature Requested: ${document.title}`,
-        html: `
+    await sendEmail({
+      to: signer.email,
+      subject: `Signature Requested: ${document.title}`,
+      html: `
           <h3>A document is ready for your signature</h3>
           <p>Please click the link below to review and sign <strong>${document.title}</strong>.</p>
           <a href="${process.env.FRONTEND_URL}/review/${document._id}" style="padding: 10px 20px; background: #249272; color: white; text-decoration: none; border-radius: 4px;">Review & Sign</a>
         `
-     });
+    });
   }
 
   /**
    * Notify all parties on completion
    */
   static async notifyCompletion(document, signers) {
-     const partyEmails = signers.map(s => s.email);
-     // Also notify the owner/HR
-     const owner = await Document.findById(document._id).populate("uploadedBy");
-     if (owner && owner.uploadedBy) partyEmails.push(owner.uploadedBy.email);
+    const partyEmails = signers.map(s => s.email);
+    // Also notify the owner/HR
+    const owner = await Document.findById(document._id).populate("uploadedBy");
+    if (owner && owner.uploadedBy) partyEmails.push(owner.uploadedBy.email);
 
-     await sendEmail({
-        to: partyEmails,
-        subject: `Completed: ${document.title}`,
-        html: `
+    await sendEmail({
+      to: partyEmails,
+      subject: `Completed: ${document.title}`,
+      html: `
           <h3>Document Signed and Completed</h3>
           <p>The document <strong>${document.title}</strong> has been signed by all parties.</p>
         `
-     });
+    });
+  }
+
+  /**
+   * Save and upload selfie
+   */
+  static async saveSelfie({ documentId, signerEmail, selfieImage, ipAddress, device }) {
+    const document = await Document.findById(documentId);
+    if (!document) throw new Error("Document not found.");
+
+    const signer = await Signer.findOne({ document: documentId, email: signerEmail.toLowerCase() });
+    if (!signer) throw new Error("Recipient not found.");
+
+    if (signer.status === "signed" || signer.status === "completed") {
+       throw new Error("Already completed signing.");
+    }
+
+    // Upload to Cloudinary
+    const uploadResponse = await cloudinary.uploader.upload(selfieImage, {
+      folder: "gitakshmi-sign/selfies",
+      resource_type: "image"
+    });
+
+    signer.selfie = {
+      url: uploadResponse.secure_url,
+      capturedAt: new Date(),
+      ip: ipAddress,
+      device: device || "Unknown"
+    };
+
+    await signer.save();
+
+    // Log Audit
+    await AuditLog.create({
+      document: documentId,
+      signer: signer._id,
+      action: "SELFIE_CAPTURED",
+      ipAddress,
+      metadata: { url: uploadResponse.secure_url, device }
+    });
+
+    return { success: true, selfieUrl: uploadResponse.secure_url };
   }
 }

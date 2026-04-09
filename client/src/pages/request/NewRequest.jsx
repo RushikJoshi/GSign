@@ -40,13 +40,22 @@ const NewRequest = () => {
       const formData = new FormData();
       formData.append("document", mergedData.file);
       formData.append("title", mergedData.title);
+      formData.append("selfieRequired", mergedData.selfieRequired || false);
 
       const uploadRes = await dmsApi.uploadDocument(formData);
       const docId = uploadRes.data.document._id;
 
-      // 2. Save fields
-      if (mergedData.fields && mergedData.fields.length > 0) {
-        await dmsApi.updateFields(docId, { fields: mergedData.fields });
+      // 2. Map fields to signer emails for backend signature embedding
+      const mappedFields = (mergedData.fields || []).map(f => {
+        const signer = mergedData.signers[f.recipientId];
+        return {
+          ...f,
+          signerEmail: signer ? signer.email : null
+        };
+      });
+
+      if (mappedFields.length > 0) {
+        await dmsApi.updateFields(docId, { fields: mappedFields });
       }
 
       // 3. Add signers
@@ -54,7 +63,8 @@ const NewRequest = () => {
         signers: mergedData.signers.map((s, i) => ({
           email: s.email,
           signingOrder: s.order || i + 1
-        }))
+        })),
+        selfieRequired: mergedData.selfieRequired
       });
 
       // 4. Start signing flow (sends first email)

@@ -32,6 +32,10 @@ const signerSchema = new mongoose.Schema(
       default: "pending",
       index: true,
     },
+    isActive: {
+      type: Boolean,
+      default: false,
+    },
     accessTokenHash: {
       type: String,
       required: true,
@@ -106,6 +110,12 @@ const signerSchema = new mongoose.Schema(
     otpAttempts: {
       type: Number,
       default: 0,
+    },
+    selfie: {
+      url: String,
+      capturedAt: Date,
+      ip: String,
+      device: String,
     }
   },
   { timestamps: true }

@@ -12,6 +12,11 @@ import UserDashboard from "./pages/UserDashboard";
 import NewRequest from "./pages/request/NewRequest";
 import Settings from "./pages/Settings";
 import PublicSigningPage from "./pages/PublicSigningPage";
+import TemplatesList from "./pages/templates/TemplatesList";
+import CreateTemplate from "./pages/templates/CreateTemplate";
+import UseTemplate from "./pages/templates/UseTemplate";
+import PreviewTemplate from "./pages/templates/PreviewTemplate";
+import SignYourself from "./pages/request/SignYourself";
 
 const PublicOnlyRoute = ({ children }) => {
   const { isAuthenticated, isAuthReady } = useAuth();
@@ -66,6 +71,12 @@ function App() {
           <Route path="/company-admin" element={<CompanyAdminDashboard />} />
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/request/new" element={<NewRequest />} />
+          <Route path="/request/sign-yourself" element={<SignYourself />} />
+          <Route path="/templates" element={<TemplatesList />} />
+          <Route path="/templates/create" element={<CreateTemplate />} />
+          <Route path="/templates/:id/edit" element={<CreateTemplate />} />
+          <Route path="/templates/:id/preview" element={<PreviewTemplate />} />
+          <Route path="/templates/:id/use" element={<UseTemplate />} />
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={[ROLES.EMPLOYEE, ROLES.HR, ROLES.ADMIN]} />}>

@@ -64,7 +64,7 @@ const documentSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["draft", "in_progress", "pending", "signed", "completed", "expired"],
+      enum: ["draft", "in_progress", "pending", "signed", "completed", "expired", "sent", "viewed", "Viewed"],
       default: "pending",
       index: true,
     },
@@ -106,12 +106,46 @@ const documentSchema = new mongoose.Schema(
       type: [mongoose.Schema.Types.Mixed],
       default: [],
     },
+    selfieRequired: {
+      type: Boolean,
+      default: false,
+    },
     // NEW FIELDS FOR SIGNING WORKFLOW
+    signMode: {
+      type: String,
+      enum: ["sequential", "parallel"],
+      default: "sequential",
+    },
     signingMode: {
        type: String,
        enum: ["sequential", "parallel"],
-       default: "parallel",
-    }
+       default: "sequential",
+    },
+    signers: [
+      {
+        name: String,
+        email: String,
+        order: Number,
+        status: {
+          type: String,
+          enum: ["pending", "signed"],
+          default: "pending",
+        },
+        isActive: {
+          type: Boolean,
+          default: false,
+        },
+        signedAt: Date,
+        viewedAt: Date,
+        emailedAt: Date,
+        selfie: {
+          url: String,
+          capturedAt: Date,
+          ip: String,
+          device: String,
+        },
+      },
+    ],
   },
   { timestamps: true }
 );

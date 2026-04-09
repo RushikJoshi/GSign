@@ -14,7 +14,8 @@ import {
   Clock,
   CheckCircle2,
   XCircle,
-  History
+  History,
+  Workflow
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { ROLES } from "../../constants/roles";
@@ -24,7 +25,7 @@ const Sidebar = ({ setSidebarOpen }) => {
 
   const mainLinks = [
     { 
-      label: "Sign", 
+      label: "Dashboard", 
       to: user.role === ROLES.SUPERADMIN ? "/super-admin" : "/company-admin", 
       icon: LayoutDashboard 
     },
@@ -35,30 +36,28 @@ const Sidebar = ({ setSidebarOpen }) => {
       hasFlyout: true,
       sections: [
         {
-          title: "Sent",
+          title: "Status",
           links: [
-            { label: "All", to: "/history" },
-            { label: "Scheduled", to: "/history" },
-            { label: "In progress", to: "/history" },
-            { label: "Completed", to: "/history" },
-            { label: "Declined", to: "/history" },
-            { label: "Expired", to: "/history" },
-            { label: "Recalled", to: "/history" },
-            { label: "Draft", to: "/history" },
-            { label: "Bulk send", to: "/history" },
+            { label: "All Documents", to: "/history" },
+            { label: "In Progress", to: "/history?status=in_progress" },
+            { label: "Completed", to: "/history?status=completed" },
+            { label: "Declined", to: "/history?status=declined" },
+            { label: "Expired", to: "/history?status=expired" },
+            { label: "Draft", to: "/history?status=draft" },
           ]
         },
         {
-          title: "Received",
+          title: "Inbox",
           links: [
-            { label: "All", to: "/history" },
-            { label: "Action required", to: "/history" },
+            { label: "Waiting for Me", to: "/history" },
+            { label: "Needs Review", to: "/history" },
           ]
         }
       ]
     },
     { label: "Templates", to: "/templates", icon: FileStack },
     { label: "SignForms", to: "/sign-forms", icon: SquarePen },
+    { label: "Workflows", to: "/workflows", icon: Workflow },
     { label: "Reports", to: "/reports", icon: BarChart3 },
     { 
       label: "Settings", 
@@ -67,21 +66,18 @@ const Sidebar = ({ setSidebarOpen }) => {
       hasFlyout: true,
       sections: [
         {
-          title: "General",
+          title: "Preferences",
           links: [
-            { label: "My profile", to: "/settings" },
+            { label: "My Profile", to: "/settings" },
+            { label: "Notifications", to: "/settings" },
             { label: "Integrations", to: "/settings" },
-            { label: "My notifications", to: "/settings" },
-            { label: "Contacts", to: "/settings" },
-            { label: "Trash", to: "/settings" },
           ]
         },
         {
-          title: "Admin",
+          title: "Organization",
           links: [
-            { label: "Users and control", to: "/settings" },
-            { label: "Account settings", to: "/settings" },
-            { label: "Subscription details", to: "/settings" },
+            { label: "Team Members", to: "/settings" },
+            { label: "Account Settings", to: "/settings" },
             { label: "Branding", to: "/settings" },
           ]
         }
@@ -90,45 +86,58 @@ const Sidebar = ({ setSidebarOpen }) => {
   ];
 
   return (
-    <aside className="h-screen flex flex-col bg-[#272d37] w-[90px] fixed lg:static inset-y-0 z-50">
-      {/* Branding - matching Zoho Logo area */}
-      <div className="h-[60px] flex items-center justify-center border-b border-white/5">
-        <LayoutDashboard className="w-6 h-6 text-slate-400 opacity-50" />
+    <aside className="h-screen flex flex-col bg-[#0F172A] w-[72px] fixed lg:static inset-y-0 z-50 border-r border-slate-800 shadow-2xl transition-all duration-300 overflow-visible">
+      {/* Premium Logo Area */}
+      <div className="h-[72px] flex items-center justify-center relative border-b border-slate-800/50">
+        <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-400 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20 transform hover:rotate-6 transition-transform cursor-pointer">
+           <LayoutDashboard className="w-5 h-5 text-white" />
+        </div>
       </div>
 
-      {/* Menu Area */}
-      <div className="flex-1 py-4 flex flex-col items-center">
-        <nav className="w-full space-y-4">
+      {/* Navigation Area */}
+      <div className="flex-1 py-8 flex flex-col items-center">
+        <nav className="w-full space-y-3 px-3">
           {mainLinks.map((link) => (
-            <div key={link.label} className="relative group flex justify-center">
+            <div key={link.label} className="relative group">
               <NavLink
                 to={link.to}
                 onClick={() => setSidebarOpen(false)}
                 className={({ isActive }) =>
-                  `flex flex-col items-center gap-1.5 w-full py-3 transition-colors ${
+                  `flex flex-col items-center justify-center w-full aspect-square rounded-xl transition-all duration-300 relative group ${
                     isActive 
-                      ? "text-[#4fd1c5]" 
-                      : "text-slate-400 hover:text-white"
+                      ? "text-emerald-400 bg-emerald-500/10 shadow-sm" 
+                      : "text-slate-400 hover:text-white hover:bg-slate-800/50"
                   }`
                 }
               >
-                <link.icon className={`w-5 h-5 ${link.label === 'Sign' ? 'stroke-[2.5]' : ''}`} />
-                <span className="text-[11px] font-medium">{link.label}</span>
+                {({ isActive }) => (
+                  <>
+                    <link.icon className={`w-[20px] h-[20px] transition-all duration-300 ${isActive ? 'text-emerald-400' : 'group-hover:text-white text-slate-400'}`} />
+                    
+                    {/* Tooltip on Hover */}
+                    <div className="absolute left-[calc(100%+16px)] top-1/2 -translate-y-1/2 px-3 py-1.5 bg-slate-900 border border-slate-700/50 text-white text-[12px] font-semibold rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 group-hover:translate-x-0 -translate-x-2 transition-all whitespace-nowrap z-[110] shadow-2xl backdrop-blur-md">
+                       {link.label}
+                    </div>
+
+                    {/* Active Indicator Bar */}
+                    <div className={`absolute left-[-12px] top-1/2 -translate-y-1/2 w-1 h-6 bg-emerald-500 rounded-r-full transition-all duration-300 origin-left ${isActive ? 'opacity-100 scale-100' : 'opacity-0 scale-0'}`} />
+                  </>
+                )}
               </NavLink>
 
-              {/* Flyout Menu */}
+              {/* Advanced Flyout with Glassmorphism */}
               {link.hasFlyout && (
-                <div className={`absolute left-full ${link.label === 'Settings' ? 'bottom-0' : 'top-0'} ml-0.5 w-[240px] bg-[#2d3748] shadow-2xl rounded-r-lg opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-[100] border-l border-white/5`}>
-                   <div className="p-6 space-y-8 max-h-[85vh] overflow-y-auto no-scrollbar">
+                <div className={`absolute left-full ${link.label === 'Settings' ? 'bottom-0' : 'top-0'} ml-2 w-[260px] bg-slate-900/95 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] rounded-2xl opacity-0 translate-x-4 pointer-events-none group-hover:opacity-100 group-hover:translate-x-0 group-hover:pointer-events-auto transition-all duration-300 z-[100] border border-slate-700/50`}>
+                   <div className="p-6 space-y-8">
                      {link.sections.map((section) => (
                        <div key={section.title}>
-                         <h4 className="text-white text-xs font-bold uppercase tracking-wider mb-4 opacity-100">{section.title}</h4>
-                         <div className="space-y-3">
+                         <h4 className="text-slate-500 text-[10px] font-black uppercase tracking-[2px] mb-4">{section.title}</h4>
+                         <div className="space-y-1">
                             {section.links.map((sublink) => (
                               <NavLink 
                                 key={sublink.label} 
                                 to={sublink.to} 
-                                className="block text-[13px] text-slate-300 hover:text-white transition-colors"
+                                className="block py-2 px-3 rounded-lg text-[13px] font-medium text-slate-300 hover:text-white hover:bg-emerald-500/10 transition-all font-inter"
                               >
                                 {sublink.label}
                               </NavLink>
@@ -144,14 +153,14 @@ const Sidebar = ({ setSidebarOpen }) => {
         </nav>
       </div>
 
-      {/* Floating Create Button at the bottom (Big Green Plus like Zoho) */}
-      <div className="p-6 mt-auto flex justify-center">
+      {/* Action Button at Bottom */}
+      <div className="p-4 mt-auto border-t border-slate-800/50 flex justify-center">
          <NavLink 
            to="/request/new" 
-           className="w-11 h-11 bg-[#249272] hover:bg-[#1e7a5f] text-white rounded-md shadow-lg flex items-center justify-center transition-all active:scale-95"
-           title="Create New"
+           className="w-12 h-12 bg-gradient-to-tr from-emerald-600 via-emerald-500 to-teal-400 text-white rounded-xl shadow-lg shadow-emerald-500/20 transition-all hover:scale-110 active:scale-95 flex items-center justify-center group"
+           title="Create New Request"
          >
-           <Plus className="w-6 h-6 stroke-[3]" />
+           <Plus className="w-6 h-6 stroke-[3] group-hover:rotate-90 transition-transform duration-500" />
          </NavLink>
       </div>
     </aside>

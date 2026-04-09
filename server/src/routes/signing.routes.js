@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { sendOTP, verifyOTP, signDocument, getDocumentByToken, streamDocumentPreview } from "../controllers/signing.controller.js";
+import { sendOTP, verifyOTP, signDocument, getDocumentByToken, streamDocumentPreview, uploadSelfie } from "../controllers/signing.controller.js";
 
 const router = Router();
 
@@ -26,6 +26,12 @@ router.post("/send-otp", sendOTP);
  * @route POST /api/signing/verify-otp
  */
 router.post("/verify-otp", verifyOTP);
+
+/**
+ * @desc Upload live selfie for verification
+ * @route POST /api/signing/upload-selfie
+ */
+router.post("/upload-selfie", uploadSelfie);
 
 /**
  * @desc Finalize document signing

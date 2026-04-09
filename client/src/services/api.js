@@ -101,7 +101,22 @@ export const signingApi = {
   sendOTP: (payload) => api.post("/api/signing/send-otp", payload),
   verifyOTP: (payload) => api.post("/api/signing/verify-otp", payload),
   signDocument: (payload) => api.post("/api/signing/sign-document", payload),
+  uploadSelfie: (payload) => api.post("/api/signing/upload-selfie", payload),
   previewUrl: (token) => `${API_BASE_URL}/api/signing/document/${token}/preview`,
+};
+
+export const templateApi = {
+  getTemplates: (params = {}) => api.get("/api/templates", { params }),
+  getTemplate: (id) => api.get(`/api/templates/${id}`),
+  createTemplate: (formData) =>
+    api.post("/api/templates", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
+  updateFields: (id, payload) => api.patch(`/api/templates/${id}/fields`, payload),
+  deleteTemplate: (id) => api.delete(`/api/templates/${id}`),
+  duplicateTemplate: (id) => api.post(`/api/templates/${id}/duplicate`),
+  toggleSignForm: (id, payload) => api.patch(`/api/templates/${id}/toggle-signform`, payload),
+  templateFileUrl: (id) => `${API_BASE_URL}/api/templates/${id}/file`,
 };
 
 export default api;

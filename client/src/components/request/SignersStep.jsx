@@ -1,12 +1,51 @@
-import { useState } from "react";
-import { Plus, GripVertical, Settings2, UserPlus, ChevronDown } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Plus, GripVertical, Settings2, UserPlus, ChevronDown, Shield, MessageSquare, X, Check, Users, Mail, Type, Info } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
+import Select from "../common/Select";
 
 const SignersStep = ({ onNext, onBack, initialData }) => {
-  const [signers, setSigners] = useState(initialData?.signers || [{ name: "", email: "", order: 1 }]);
+  const { user } = useAuth();
+  const [signers, setSigners] = useState(initialData?.signers || [{
+    name: "",
+    email: "",
+    order: 1,
+    role: "sign",
+    authentication: false,
+    privateNote: ""
+  }]);
   const [isSequential, setIsSequential] = useState(initialData?.isSequential ?? true);
+  const [selfieRequired, setSelfieRequired] = useState(initialData?.selfieRequired ?? false);
+
+  const roleOptions = [
+    { value: "sign", label: "NEEDS TO SIGN" },
+    { value: "copy", label: "RECEIVES COPY" },
+    { value: "view", label: "NEEDS TO VIEW" }
+  ];
 
   const addSigner = () => {
-    setSigners([...signers, { name: "", email: "", order: signers.length + 1 }]);
+    setSigners([...signers, {
+      name: "",
+      email: "",
+      order: signers.length + 1,
+      role: "sign",
+      authentication: false,
+      privateNote: ""
+    }]);
+  };
+
+  const handleAddMe = () => {
+    if (!user) return;
+    const alreadyPresent = signers.some(s => s.email === user.email);
+    if (!alreadyPresent) {
+      setSigners([...signers, {
+        name: user.name,
+        email: user.email,
+        order: signers.length + 1,
+        role: "sign",
+        authentication: false,
+        privateNote: ""
+      }]);
+    }
   };
 
   const updateSigner = (index, field, value) => {
@@ -22,150 +61,102 @@ const SignersStep = ({ onNext, onBack, initialData }) => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto py-4">
-      <div className="bg-white border-b border-slate-200 pb-2 mb-8">
-        <h2 className="text-[20px] font-medium text-slate-800">Send for signatures</h2>
-      </div>
+    <div className="w-full max-w-6xl space-y-8 animate-in fade-in duration-300">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Recipients List</label>
+          <button onClick={handleAddMe} className="text-[12px] font-bold text-emerald-600 hover:underline">Add me as signer</button>
+        </div>
 
-      <div className="space-y-8">
-        {/* Document Name Display */}
-        <section>
-          <div className="flex items-center gap-6">
-            <label className="text-[13px] text-slate-600 w-32 font-medium">Document name</label>
-            <input
-              value={initialData?.title}
-              disabled
-              className="flex-1 max-w-md h-[34px] px-3 border border-slate-200 bg-slate-50 rounded-sm text-[13px] text-slate-500"
-            />
-          </div>
-        </section>
-
-        {/* Recipients Section */}
-        <section className="pt-4">
-          <h3 className="text-[15px] font-bold text-slate-800 mb-6">Add recipients</h3>
-
-          <div className="flex items-center gap-6 mb-6">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={isSequential}
-                onChange={(e) => setIsSequential(e.target.checked)}
-                className="w-4 h-4 rounded-sm border-slate-300 text-sky-600 focus:ring-sky-500"
-              />
-              <span className="text-[13px] text-slate-700 font-medium">Send in order</span>
-            </label>
-            <button className="text-[13px] text-sky-600 font-bold hover:underline">Add me</button>
-          </div>
-
-          <div className="space-y-3">
-            {signers.map((signer, index) => (
-              <div key={index} className="flex items-center gap-3 group relative pl-6">
-                {/* Blue highlight for current focus simulation */}
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-sky-500 rounded-sm opacity-0 group-hover:opacity-100 transition-opacity"></div>
-
-                <div className="flex items-center gap-2 w-full max-w-4xl border border-slate-200 rounded-sm bg-white p-2 group-hover:border-sky-300 transition-colors">
-                  <div className="flex items-center gap-2 px-2 border-r border-slate-100">
-                    <GripVertical className="w-4 h-4 text-slate-300 cursor-grab" />
-                    <span className="text-[12px] font-bold text-slate-500 w-4">{index + 1}</span>
-                  </div>
-
-                  <input
-                    value={signer.email}
-                    onChange={(e) => updateSigner(index, "email", e.target.value)}
-                    placeholder="Email"
-                    className="flex-1 h-[32px] px-3 text-[13px] outline-none focus:bg-slate-50 transition-colors"
-                  />
-
-                  <input
-                    value={signer.name}
-                    onChange={(e) => updateSigner(index, "name", e.target.value)}
-                    placeholder="Name"
-                    className="flex-1 h-[32px] px-3 border-l border-slate-100 text-[13px] outline-none focus:bg-slate-50 transition-colors"
-                  />
-
-                  <select className="h-[32px] px-3 border-l border-slate-100 text-[13px] text-slate-600 outline-none bg-transparent">
-                    <option>Needs to sign</option>
-                    <option>Receives a copy</option>
-                    <option>Needs to view</option>
-                  </select>
-
-                  <div className="px-3 border-l border-slate-100 flex items-center text-slate-400">
-                    <Settings2 className="w-4 h-4" />
-                  </div>
-
-                  <button
-                    className="flex items-center gap-2 px-4 py-1.5 border-l border-slate-100 text-[12px] font-bold text-slate-600 hover:bg-slate-50"
-                  >
-                    Customize
-                  </button>
-                </div>
-
-                <button
-                  onClick={() => removeSigner(index)}
-                  className="p-1.5 text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <Plus className="w-4 h-4 rotate-45" />
+        {/* Minimal Signer Rows */}
+        <div className="space-y-3 max-w-3xl">
+          {signers.map((signer, index) => (
+            <div key={index} className="flex flex-col sm:flex-row gap-3 items-start border border-slate-200 rounded-lg p-4 bg-white shadow-sm hover:shadow-md transition-shadow relative">
+              <div className="flex items-center gap-3 shrink-0">
+                <span className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[11px] font-black tracking-widest text-slate-400">{index + 1}</span>
+              </div>
+              <div className="flex-1 w-full grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input
+                  value={signer.name}
+                  onChange={(e) => updateSigner(index, "name", e.target.value)}
+                  placeholder="Signer Name"
+                  className="w-full h-9 px-3 border border-slate-200 rounded text-[13.5px] font-medium outline-none focus:border-emerald-500 transition-all font-inter"
+                />
+                <input
+                  value={signer.email}
+                  onChange={(e) => updateSigner(index, "email", e.target.value)}
+                  placeholder="Email Address"
+                  className="w-full h-9 px-3 border border-slate-200 rounded text-[13.5px] font-medium outline-none focus:border-emerald-500 transition-all font-inter"
+                />
+              </div>
+              <div className="flex items-center gap-2 pt-2 md:pt-0">
+                <Select
+                  value={signer.role}
+                  onChange={(val) => updateSigner(index, "role", val)}
+                  options={roleOptions}
+                  className="min-w-[170px]"
+                />
+                <button onClick={() => removeSigner(index)} className="p-2 text-slate-300 hover:text-red-500 transition active:scale-90">
+                  <Plus className="w-4 h-4 rotate-45 stroke-[3px]" />
                 </button>
               </div>
-            ))}
-          </div>
-
-          <button
-            onClick={addSigner}
-            className="mt-6 flex items-center gap-2 px-4 py-1.5 border border-slate-300 rounded-sm text-[12px] font-bold text-slate-700 hover:bg-slate-50 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Add recipient
-          </button>
-        </section>
-
-        <section className="pt-8 border-t border-slate-100 space-y-8">
-          <div className="space-y-6 max-w-4xl">
-            <div>
-              <h3 className="text-[15px] font-bold text-slate-800 mb-4">Email setup</h3>
             </div>
+          ))}
+        </div>
+        <button onClick={addSigner} className="text-emerald-600 font-bold text-[13px] flex items-center gap-2 hover:underline">
+          <Plus className="w-4 h-4" /> Add another recipient
+        </button>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-[13px] font-bold text-slate-800 mb-2">Email subject</label>
-                <input
-                  type="text"
-                  placeholder="Signature request for document"
-                  className="w-full h-[34px] px-3 border border-slate-300 rounded-sm outline-none focus:border-sky-500 text-[13px]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[13px] font-bold text-slate-800 mb-2">Note to all recipients</label>
-                <textarea
-                  placeholder="Enter message for the recipients..."
-                  className="w-full h-[120px] p-4 border border-slate-300 rounded-sm outline-none focus:border-sky-500 text-[13px] resize-none"
-                />
-              </div>
+        <div className="pt-6 border-t border-slate-100 flex items-center gap-4">
+          <label className="flex items-center gap-3 cursor-pointer group">
+            <input
+              type="checkbox"
+              checked={isSequential}
+              onChange={(e) => setIsSequential(e.target.checked)}
+              className="w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500"
+            />
+            <span className="text-[13px] text-slate-600 font-bold">Send in order (1, 2, 3...)</span>
+          </label>
+          <div className="w-[1px] h-4 bg-slate-200" />
+          <label className="flex items-center gap-3 cursor-pointer group">
+            <input
+              type="checkbox"
+              checked={selfieRequired}
+              onChange={(e) => setSelfieRequired(e.target.checked)}
+              className="w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500"
+            />
+            <div className="flex items-center gap-2">
+              <Shield className={`w-4 h-4 transition-colors ${selfieRequired ? 'text-emerald-500' : 'text-slate-300'}`} />
+              <span className="text-[13px] text-slate-600 font-bold">Require Selfie Verification</span>
             </div>
-          </div>
-        </section>
+          </label>
+        </div>
       </div>
 
-      {/* Footer Actions */}
-      <div className="fixed bottom-0 left-[90px] right-0 h-[60px] bg-[#f8fafc] border-t border-slate-200 flex items-center px-8 gap-3 z-50">
+      <div className="pt-8 space-y-6">
+        <label className="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-4 border-b border-slate-100 pb-2">Message Setup</label>
+        <div className="space-y-4">
+          <input
+            type="text"
+            placeholder="Email Subject"
+            className="w-full h-10 px-4 border border-slate-200 rounded-lg text-[14px] font-medium focus:border-emerald-500 outline-none transition-all shadow-sm"
+          />
+          <textarea
+            placeholder="Message for the recipients (optional)"
+            className="w-full h-[120px] p-4 border border-slate-200 rounded-lg text-[14px] font-medium focus:border-emerald-500 outline-none transition-all shadow-sm resize-none"
+          />
+        </div>
+      </div>
+
+      {/* Simple Footer Actions */}
+      <div className="fixed bottom-0 left-[100px] right-0 h-[64px] bg-white border-t border-slate-100 flex items-center justify-end px-12 gap-3 z-40">
+        <button onClick={() => window.location.href = "/company-admin"} className="px-6 py-2 bg-white border border-slate-200 text-slate-500 rounded font-bold text-[13px] hover:bg-slate-50 shadow-sm transition-all uppercase">Close</button>
+        <button onClick={onBack} className="px-6 py-2 bg-white border border-slate-300 text-slate-600 rounded font-bold text-[13px] hover:bg-slate-50 shadow-sm transition-all uppercase">Back</button>
         <button
-          onClick={() => onNext({ signers, isSequential })}
-          className="px-6 py-1.5 bg-[#249272] text-white rounded text-[13px] font-bold transition-transform active:scale-95 shadow-sm"
+          onClick={() => onNext({ signers, isSequential, selfieRequired })}
+          className="px-10 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-bold text-[13px] transition shadow-lg shadow-emerald-500/20 active:scale-95 uppercase"
         >
           Continue
-        </button>
-        <button
-          onClick={onBack}
-          className="px-6 py-1.5 bg-white border border-slate-300 text-slate-600 rounded text-[13px] font-bold transition-colors hover:bg-slate-100"
-        >
-          Back
-        </button>
-        <button
-          onClick={() => window.location.href = "/company-admin"}
-          className="px-6 py-1.5 bg-white border border-slate-300 text-slate-600 rounded text-[13px] font-bold transition-colors hover:bg-slate-100"
-        >
-          Close
         </button>
       </div>
     </div>

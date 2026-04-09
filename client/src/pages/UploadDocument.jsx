@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { documentApi } from "../services/api";
+import Select from "../components/common/Select";
 
 const statusClass = {
   Signed: "bg-emerald-100 text-emerald-700",
@@ -180,18 +181,18 @@ const UploadDocument = () => {
           <p className="mt-1 text-sm text-slate-600">Generate token link and email it to signer.</p>
 
           <form onSubmit={handleSendSignRequest} className="mt-5 space-y-4">
-            <select
+            <Select
               value={selectedDocId}
-              onChange={(e) => setSelectedDocId(e.target.value)}
-              className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-2.5 outline-none transition focus:border-indigo-300 focus:bg-white focus:ring-2 focus:ring-indigo-100"
-            >
-              <option value="">Select document</option>
-              {documents.map((doc) => (
-                <option key={doc._id} value={doc._id}>
-                  {doc.title} ({doc.status})
-                </option>
-              ))}
-            </select>
+              onChange={setSelectedDocId}
+              options={[
+                { value: "", label: "Select document" },
+                ...documents.map((doc) => ({
+                  value: doc._id,
+                  label: `${doc.title} (${doc.status})`
+                }))
+              ]}
+              className="w-full"
+            />
             <input
               type="text"
               required
@@ -259,9 +260,8 @@ const UploadDocument = () => {
                     <p className="text-xs text-slate-500">{new Date(doc.createdAt).toLocaleString()}</p>
                   </div>
                   <span
-                    className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                      statusClass[doc.status] || "bg-slate-100 text-slate-700"
-                    }`}
+                    className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusClass[doc.status] || "bg-slate-100 text-slate-700"
+                      }`}
                   >
                     {doc.status}
                   </span>

@@ -29,6 +29,7 @@ const auditLogSchema = new mongoose.Schema(
         "OTP_VERIFIED",
         "OTP_FAILED",
         "DOCUMENT_DECLINED",
+        "SELFIE_CAPTURED",
       ],
     },
     ipAddress: {

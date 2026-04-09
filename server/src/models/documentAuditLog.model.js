@@ -28,6 +28,7 @@ const documentAuditLogSchema = new mongoose.Schema(
         "expired",
         "signed_pdf_generated",
         "locked",
+        "selfie_captured",
       ],
       required: true,
       index: true,
