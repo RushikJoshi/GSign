@@ -1,0 +1,11 @@
+{
+  "name": "gsign-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "install-all": "npm install && cd server && npm install && cd ../client && npm install",
+    "build-client": "cd client && npm run build",
+    "start-server": "cd server && npm start",
+    "deploy": "powershell ./deploy.ps1"
+  }
+}
