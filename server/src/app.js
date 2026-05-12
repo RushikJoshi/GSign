@@ -2,7 +2,6 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import path from "path";
-import { fileURLToPath } from "url";
 import { promises as fsp } from "fs";
 import authRoutes from "./routes/auth.routes.js";
 import superAdminRoutes from "./routes/superAdmin.routes.js";
@@ -14,9 +13,6 @@ import signatureRoutes from "./routes/signature.routes.js";
 import signingRoutes from "./routes/signing.routes.js";
 import templateRoutes from "./routes/template.routes.js";
 import { isDbConnected } from "./config/db.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -81,20 +77,24 @@ app.use("/api/signature", signatureRoutes);
 app.use("/api/signing", signingRoutes);
 app.use("/api/templates", templateRoutes);
 
+// --- Deployment Setup ---
+const __dirname = path.resolve();
+const clientDistPath = path.join(__dirname, "..", "client", "dist");
+
+// Serve static files from the client/dist directory
+app.use(express.static(clientDistPath));
+
+// Handle any requests that don't match the ones above by sending back index.html
+app.get("*", (req, res) => {
+  if (req.path.startsWith("/api/")) {
+    return res.status(404).json({ message: "API route not found" });
+  }
+  res.sendFile(path.join(clientDistPath, "index.html"));
+});
+
 app.use((error, _req, res, _next) => {
   return res.status(error.status || 500).json({ message: error.message || "Internal server error." });
 });
 
-// Serve frontend in production
-if (process.env.NODE_ENV === "production") {
-  const clientDistPath = path.join(__dirname, "..", "..", "client", "dist");
-  app.use(express.static(clientDistPath));
-  app.get("*", (req, res) => {
-    // Only serve index.html for non-API routes
-    if (!req.path.startsWith("/api") && !req.path.startsWith("/uploads")) {
-      res.sendFile(path.join(clientDistPath, "index.html"));
-    }
-  });
-}
-
 export default app;
+
