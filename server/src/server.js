@@ -4,7 +4,7 @@ import { connectDB } from "./config/db.js";
 
 dotenv.config();
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 4000;
 const DB_RETRY_MS = Number(process.env.DB_RETRY_MS || 10000);
 const DB_CONNECT_ATTEMPT_TIMEOUT_MS = Number(process.env.DB_CONNECT_ATTEMPT_TIMEOUT_MS || 12000);
 

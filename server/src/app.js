@@ -77,24 +77,8 @@ app.use("/api/signature", signatureRoutes);
 app.use("/api/signing", signingRoutes);
 app.use("/api/templates", templateRoutes);
 
-// --- Deployment Setup ---
-const __dirname = path.resolve();
-const clientDistPath = path.join(__dirname, "..", "client", "dist");
-
-// Serve static files from the client/dist directory
-app.use(express.static(clientDistPath));
-
-// Handle any requests that don't match the ones above by sending back index.html
-app.get("(.*)", (req, res) => {
-  if (req.path.startsWith("/api/")) {
-    return res.status(404).json({ message: "API route not found" });
-  }
-  res.sendFile(path.join(clientDistPath, "index.html"));
-});
-
 app.use((error, _req, res, _next) => {
   return res.status(error.status || 500).json({ message: error.message || "Internal server error." });
 });
 
 export default app;
-
