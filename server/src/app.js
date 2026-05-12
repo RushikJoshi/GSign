@@ -85,7 +85,7 @@ const clientDistPath = path.join(__dirname, "..", "client", "dist");
 app.use(express.static(clientDistPath));
 
 // Handle any requests that don't match the ones above by sending back index.html
-app.get("*", (req, res) => {
+app.get("(.*)", (req, res) => {
   if (req.path.startsWith("/api/")) {
     return res.status(404).json({ message: "API route not found" });
   }
